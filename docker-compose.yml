@@ -1,0 +1,51 @@
+services:
+  doc-rag:
+    image: ghcr.io/danieldrysdale/doc-rag:latest
+    container_name: doc-rag
+    ports:
+      - "8001:8001"
+    volumes:
+      - doc-rag-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  smart-api:
+    image: ghcr.io/danieldrysdale/smart-api:latest
+    container_name: smart-api
+    ports:
+      - "8002:8002"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  task-agent:
+    image: ghcr.io/danieldrysdale/task-agent:latest
+    container_name: task-agent
+    ports:
+      - "8080:8080"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DOC_RAG_URL=http://doc-rag:8001
+      - SMART_API_URL=http://smart-api:8002
+    depends_on:
+      doc-rag:
+        condition: service_healthy
+      smart-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  doc-rag-data:
+    driver: local
