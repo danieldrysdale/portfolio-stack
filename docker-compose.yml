@@ -4,26 +4,31 @@ services:
     container_name: doc-rag
     ports:
       - "8001:8001"
+    environment:
+      - OLLAMA_URL=http://host.docker.internal:11434
     volumes:
       - doc-rag-data:/data
+      - ~/PycharmProjects/doc-rag/sample_docs:/sample_docs
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:8001/health"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 15s
 
   smart-api:
     image: ghcr.io/danieldrysdale/smart-api:latest
     container_name: smart-api
     ports:
       - "8002:8002"
+    environment:
+      - OLLAMA_URL=http://host.docker.internal:11434
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:8002/health"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 15s
 
   task-agent:
     image: ghcr.io/danieldrysdale/task-agent:latest
@@ -40,11 +45,11 @@ services:
       smart-api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/health"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 15s
 
 volumes:
   doc-rag-data:
